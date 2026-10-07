@@ -1,0 +1,29 @@
+{# Moment mobile tab bar: home, categories menu, cart, account #}
+<nav class="m-tabbar lg:hidden" aria-label="التنقل">
+    <a href="{{ store.url }}" class="m-tabbar__item {{ is_page('index') ? 'is-active' : '' }}" {{ is_page('index') ? 'aria-current="page"' : '' }}>
+        <i class="sicon-home" aria-hidden="true"></i>
+        <span>الرئيسية</span>
+    </a>
+    <a href="#mobile-menu" class="m-tabbar__item mburger">
+        <i class="sicon-grid" aria-hidden="true"></i>
+        <span>الأقسام</span>
+    </a>
+    <a href="{{ link('cart') }}" class="m-tabbar__item {{ is_page('cart') ? 'is-active' : '' }}">
+        <span class="m-tabbar__cart">
+            <i class="sicon-shopping-bag" aria-hidden="true"></i>
+            <span class="m-tabbar__badge" data-cart-count>{{ cart.items_count ?: "" }}</span>
+        </span>
+        <span>السلة</span>
+    </a>
+    {% if user.type == 'guest' %}
+        <button type="button" class="m-tabbar__item" onclick="salla.event.dispatch('login::open')">
+            <i class="sicon-user" aria-hidden="true"></i>
+            <span>حسابي</span>
+        </button>
+    {% else %}
+        <a href="{{ link('customer/orders') }}" class="m-tabbar__item {{ is_page('customer.orders.index') ? 'is-active' : '' }}">
+            <i class="sicon-user" aria-hidden="true"></i>
+            <span>حسابي</span>
+        </a>
+    {% endif %}
+</nav>

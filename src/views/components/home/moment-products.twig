@@ -1,0 +1,58 @@
+{# Moment product grid: any category, picked products, latest, best sellers or offers. #}
+{% set note_type = component.note_type %}{% if note_type is iterable %}{% set note_type = (note_type|first).value ?? 'none' %}{% endif %}{% set note_type = note_type ?: 'none' %}
+{% set source = component.source %}{% if source is iterable %}{% set source = (source|first).value ?? 'categories' %}{% endif %}{% set source = source ?: 'categories' %}
+{% set layout = component.layout %}{% if layout is iterable %}{% set layout = (layout|first).value ?? 'grid' %}{% endif %}{% set layout = layout ?: 'grid' %}
+{% set visible = component.visible %}{% if visible is iterable %}{% set visible = (visible|first).value ?? '2.5' %}{% endif %}{% set visible = visible ?: '2.5' %}
+{% set cols = component.cols %}{% if cols is iterable %}{% set cols = (cols|first).value ?? '2' %}{% endif %}{% set cols = cols ?: '2' %}
+{% set auto = component.auto is defined and component.auto is not null ? (component.auto ? true : false) : true %}
+{% set speed = component.speed ?: 3 %}
+{% set c = component.category %}{% set cat_ids = [] %}{% set cat_url = '' %}{% set cj = c is null ? '' : c|json_encode(320) %}{% for seg in cj|split('"id":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' and tok not in cat_ids %}{% set cat_ids = cat_ids|merge([tok]) %}{% endif %}{% endfor %}{% if cat_ids is empty %}{% for seg in cj|split('"value":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' %}{% set cat_ids = cat_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if cat_ids is empty %}{% for seg in cj|split('/c')|slice(1) %}{% set tok = seg|split('"')|first|split('?')|first %}{% if tok matches '/^[0-9]+$/' %}{% set cat_ids = cat_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if cat_ids is empty and cj matches '/^"?[0-9]+"?$/' %}{% set cat_ids = [cj|trim('"')] %}{% endif %}{% set urlp = cj|split('"url":"') %}{% if urlp|length > 1 %}{% set cat_url = (urlp|slice(1, 1)|first)|split('"')|first %}{% endif %}{% set cat_id = cat_ids|join(',') %}
+{% set limit = component.limit ?: 8 %}
+{% set ids = '' %}
+{% if source == 'selected' and component.products|length %}
+  {% set ids = '[' ~ component.products|map(p => p.id)|join(',') ~ ']' %}
+{% elseif source == 'categories' and cat_id %}
+  {% set ids = '[' ~ cat_id ~ ']' %}
+{% endif %}
+{% set more_url = component.more_url ?: cat_url %}
+
+{# per-section text style: generated from components/moment/text-style.twig #}
+{% set ms_cls = [] %}{% set ms_css = [] %}{% set ms_fonts = [] %}
+{% for g in ['title', 'text'] %}{% set k = g == 'title' ? 't' : 'b' %}
+  {% set f = attribute(component, g ~ '_font') %}{% if f is iterable %}{% set f = (f|first).value ?? '' %}{% endif %}
+  {% set s = attribute(component, g ~ '_size') %}{% if s is iterable %}{% set s = (s|first).value ?? '' %}{% endif %}
+  {% set w = attribute(component, g ~ '_weight') %}{% if w is iterable %}{% set w = (w|first).value ?? '' %}{% endif %}
+  {% set c = attribute(component, g ~ '_color') %}
+  {% if f and f != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'f']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'f:\'' ~ f ~ '\'']) %}{% set ms_fonts = ms_fonts|merge([f]) %}{% endif %}
+  {% if s and s != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 's']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 's:' ~ s ~ 'px']) %}{% endif %}
+  {% if w and w != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'w']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'w:' ~ w]) %}{% endif %}
+  {% if c and attribute(component, g ~ '_color_on') %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'c']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'c:' ~ c]) %}{% endif %}
+{% endfor %}
+{% set ms_class = ms_cls|join(' ') %}{% set ms_style = ms_css|join(';') %}
+{% if ms_fonts|length %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{% for f in ms_fonts %}family={{ f|replace({' ': '+'}) }}{{ f in ['Bebas Neue', 'Lalezar', 'Reem Kufi Fun'] ? '' : (f == 'Almarai' ? ':wght@400;700;800' : (f == 'Tajawal' ? ':wght@400;500;700;800' : ':wght@400;500;600;700')) }}&{% endfor %}display=swap">{% endif %}
+{% set mb = component.more_style %}{% if mb is iterable %}{% set mb = (mb|first).value ?? 'theme' %}{% endif %}{% set mb = mb ?: 'theme' %}{% set mb_cls = mb != 'theme' ? ' mb-on mb-' ~ mb : '' %}{% set mb_css = component.more_colors_on and component.more_bg ? ';--m-more-bg:' ~ component.more_bg ~ ';--m-more-fg:' ~ (component.more_fg ?: '#ffffff') : '' %}
+<section component-id="{{ componentId }}" class="s-block m-section {{ ms_class }}{{ mb_cls }}" style="{{ ms_style }}{{ mb_css }}" data-testid="moment-products">
+  <div class="container">
+    {% if component.title or more_url %}
+      <div class="m-head">
+        <div>
+          {% if component.title %}<h2 class="m-h2">{{ component.title }}</h2>{% endif %}
+          {% if component.subtitle %}<p class="m-sub">{{ component.subtitle }}</p>{% endif %}
+        </div>
+        {% if more_url and layout == 'rail' %}<a class="m-more m-row__more" href="{{ more_url }}">{{ component.more_text ?: 'عرض الكل' }}</a>{% endif %}
+      </div>
+    {% endif %}
+    {% if note_type != 'none' and component.note %}
+      <p class="m-note m-note--{{ note_type }}"><i class="{{ note_type == 'slow' ? 'sicon-time' : 'sicon-shipping-fast' }}" aria-hidden="true"></i><span>{{ component.note }}</span></p>
+    {% endif %}
+    {% if source in ['categories', 'selected'] and not ids %}
+      <p class="m-empty">اختر {{ source == 'selected' ? 'المنتجات' : 'التصنيف' }} من إعدادات هذا القسم.</p>
+    {% else %}
+      <div class="m-list m-list--{{ layout }}" style="--vis: {{ visible }}; --cols: {{ cols }}"{% if layout == 'rail' and auto %} data-auto="{{ speed }}"{% endif %}>
+        <salla-products-list source="{{ source }}" {% if ids %}source-value="{{ ids }}"{% endif %} limit="{{ limit }}"></salla-products-list>
+      </div>
+      {% if more_url and layout == 'grid' %}<a class="m-btn m-btn--ghost" href="{{ more_url }}">{{ component.more_text ?: 'عرض الكل' }}</a>{% endif %}
+    {% endif %}
+  </div>
+  {% include 'components.moment.rail-script' %}
+</section>

@@ -1,0 +1,36 @@
+{# Moment banner: one image with a headline and a button. #}
+{% set style = component.style is iterable ? ((component.style|first).value ?? 'overlay') : (component.style ?: 'overlay') %}
+{# per-section text style: generated from components/moment/text-style.twig #}
+{% set ms_cls = [] %}{% set ms_css = [] %}{% set ms_fonts = [] %}
+{% for g in ['title', 'text'] %}{% set k = g == 'title' ? 't' : 'b' %}
+  {% set f = attribute(component, g ~ '_font') %}{% if f is iterable %}{% set f = (f|first).value ?? '' %}{% endif %}
+  {% set s = attribute(component, g ~ '_size') %}{% if s is iterable %}{% set s = (s|first).value ?? '' %}{% endif %}
+  {% set w = attribute(component, g ~ '_weight') %}{% if w is iterable %}{% set w = (w|first).value ?? '' %}{% endif %}
+  {% set c = attribute(component, g ~ '_color') %}
+  {% if f and f != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'f']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'f:\'' ~ f ~ '\'']) %}{% set ms_fonts = ms_fonts|merge([f]) %}{% endif %}
+  {% if s and s != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 's']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 's:' ~ s ~ 'px']) %}{% endif %}
+  {% if w and w != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'w']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'w:' ~ w]) %}{% endif %}
+  {% if c and attribute(component, g ~ '_color_on') %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'c']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'c:' ~ c]) %}{% endif %}
+{% endfor %}
+{% set ms_class = ms_cls|join(' ') %}{% set ms_style = ms_css|join(';') %}
+{% if ms_fonts|length %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{% for f in ms_fonts %}family={{ f|replace({' ': '+'}) }}{{ f in ['Bebas Neue', 'Lalezar', 'Reem Kufi Fun'] ? '' : (f == 'Almarai' ? ':wght@400;700;800' : (f == 'Tajawal' ? ':wght@400;500;700;800' : ':wght@400;500;600;700')) }}&{% endfor %}display=swap">{% endif %}
+<section component-id="{{ componentId }}" class="s-block m-section {{ ms_class }}" style="{{ ms_style }}" data-testid="moment-banner">
+  <div class="container">
+    <a class="m-banner m-banner--{{ style }}" href="{{ component.url ?: '#' }}">
+      <span class="m-banner__media">
+        {% if component.image %}
+          <picture>
+            {% if component.image_mobile %}<source media="(max-width: 767px)" srcset="{{ component.image_mobile|cdn(900) }}">{% endif %}
+            <img src="{{ component.image|cdn(1600) }}" alt="{{ component.title }}" loading="lazy">
+          </picture>
+        {% endif %}
+      </span>
+      <span class="m-banner__body">
+        {% if component.eyebrow %}<span class="m-banner__eyebrow">{{ component.eyebrow }}</span>{% endif %}
+        {% if component.title %}<span class="m-banner__title">{{ component.title }}</span>{% endif %}
+        {% if component.text %}<span class="m-banner__text">{{ component.text }}</span>{% endif %}
+        {% if component.button %}<span class="m-banner__btn">{{ component.button }}</span>{% endif %}
+      </span>
+    </a>
+  </div>
+</section>

@@ -1,0 +1,61 @@
+{# Slides every .m-list--rail[data-auto] one card at a time. Loaded once per page. Pauses on touch/hover, off-screen, and for reduced motion. #}
+<script>
+  (function () {
+    if (window.__momentRails) return;
+    window.__momentRails = true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var paused = new WeakMap();
+    function hold(el) { paused.set(el, Date.now() + 6000); }
+    document.addEventListener('pointerdown', function (e) { var r = e.target.closest && e.target.closest('.m-list--rail'); if (r) hold(r); }, { passive: true });
+    document.addEventListener('touchstart', function (e) { var r = e.target.closest && e.target.closest('.m-list--rail'); if (r) hold(r); }, { passive: true });
+    document.addEventListener('mouseover', function (e) { var r = e.target.closest && e.target.closest('.m-list--rail'); if (r) hold(r); }, { passive: true });
+    var last = new WeakMap();
+    setInterval(function () {
+      document.querySelectorAll('.m-list--rail[data-auto]').forEach(function (rail) {
+        var secs = Math.max(2, parseFloat(rail.getAttribute('data-auto')) || 3);
+        var now = Date.now();
+        if (!last.has(rail)) { last.set(rail, now); return; }
+        if ((paused.get(rail) || 0) > now || (last.get(rail) || 0) + secs * 1000 > now) return;
+        var box = rail.getBoundingClientRect();
+        if (box.bottom < 0 || box.top > window.innerHeight || box.width === 0) return;
+        var track = rail.querySelector('.s-products-list-wrapper') || rail.querySelector('salla-products-list');
+        if (!track || !track.firstElementChild) return;
+        last.set(rail, now);
+        var max = track.scrollWidth - track.clientWidth;
+        if (max <= 4) return;
+        var step = track.firstElementChild.getBoundingClientRect().width + 12;
+        var rtl = getComputedStyle(track).direction === 'rtl';
+        if (Math.abs(track.scrollLeft) >= max - 4) track.scrollTo({ left: 0, behavior: 'smooth' });
+        else track.scrollBy({ left: rtl ? -step : step, behavior: 'smooth' });
+      });
+      document.querySelectorAll('.m-promos[data-auto]').forEach(function (strip) {
+        var secs = Math.max(2, parseFloat(strip.getAttribute('data-auto')) || 4);
+        var now = Date.now();
+        if (!last.has(strip)) { last.set(strip, now); return; }
+        if ((paused.get(strip) || 0) > now || (last.get(strip) || 0) + secs * 1000 > now) return;
+        var box = strip.getBoundingClientRect();
+        if (box.bottom < 0 || box.top > window.innerHeight || box.width === 0 || !strip.firstElementChild) return;
+        last.set(strip, now);
+        var max = strip.scrollWidth - strip.clientWidth;
+        if (max <= 4) return;
+        var step = strip.firstElementChild.getBoundingClientRect().width + 10;
+        var rtl = getComputedStyle(strip).direction === 'rtl';
+        if (Math.abs(strip.scrollLeft) >= max - 4) strip.scrollTo({ left: 0, behavior: 'smooth' });
+        else strip.scrollBy({ left: rtl ? -step : step, behavior: 'smooth' });
+      });
+    }, 500);
+    // dots follow the visible card
+    document.addEventListener('scroll', function (e) {
+      var strip = e.target;
+      if (!strip.classList || !strip.classList.contains('m-promos')) return;
+      var dots = strip.parentElement.querySelectorAll('.m-promos__dots i');
+      if (!dots.length || !strip.firstElementChild) return;
+      var w = strip.firstElementChild.getBoundingClientRect().width + 10;
+      var i = Math.round(Math.abs(strip.scrollLeft) / w);
+      dots.forEach(function (d, n) { d.classList.toggle('is-on', n === i); });
+    }, true);
+    ['pointerdown', 'touchstart', 'mouseover'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) { var s = e.target.closest && e.target.closest('.m-promos'); if (s) paused.set(s, Date.now() + 6000); }, { passive: true });
+    });
+  })();
+</script>

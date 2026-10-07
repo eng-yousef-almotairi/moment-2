@@ -1,0 +1,41 @@
+{# Moment reviews: the store's real Salla reviews. Names can be shown, masked (م*** ا*****) or hidden. #}
+{% set sort = component.sort is iterable ? ((component.sort|first).value ?? 'top_rating') : (component.sort ?: 'top_rating') %}
+{% set names = component.name_mode is iterable ? ((component.name_mode|first).value ?? 'mask') : (component.name_mode ?: 'mask') %}
+{# per-section text style: generated from components/moment/text-style.twig #}
+{% set ms_cls = [] %}{% set ms_css = [] %}{% set ms_fonts = [] %}
+{% for g in ['title', 'text'] %}{% set k = g == 'title' ? 't' : 'b' %}
+  {% set f = attribute(component, g ~ '_font') %}{% if f is iterable %}{% set f = (f|first).value ?? '' %}{% endif %}
+  {% set s = attribute(component, g ~ '_size') %}{% if s is iterable %}{% set s = (s|first).value ?? '' %}{% endif %}
+  {% set w = attribute(component, g ~ '_weight') %}{% if w is iterable %}{% set w = (w|first).value ?? '' %}{% endif %}
+  {% set c = attribute(component, g ~ '_color') %}
+  {% if f and f != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'f']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'f:\'' ~ f ~ '\'']) %}{% set ms_fonts = ms_fonts|merge([f]) %}{% endif %}
+  {% if s and s != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 's']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 's:' ~ s ~ 'px']) %}{% endif %}
+  {% if w and w != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'w']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'w:' ~ w]) %}{% endif %}
+  {% if c and attribute(component, g ~ '_color_on') %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'c']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'c:' ~ c]) %}{% endif %}
+{% endfor %}
+{% set ms_class = ms_cls|join(' ') %}{% set ms_style = ms_css|join(';') %}
+{% if ms_fonts|length %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{% for f in ms_fonts %}family={{ f|replace({' ': '+'}) }}{{ f in ['Bebas Neue', 'Lalezar', 'Reem Kufi Fun'] ? '' : (f == 'Almarai' ? ':wght@400;700;800' : (f == 'Tajawal' ? ':wght@400;500;700;800' : ':wght@400;500;600;700')) }}&{% endfor %}display=swap">{% endif %}
+<section component-id="{{ componentId }}" class="s-block m-section m-reviews {{ ms_class }}" style="{{ ms_style }}" data-testid="moment-reviews" data-names="{{ names }}">
+  <div class="container">
+    {% if component.title %}<h2 class="m-h2">{{ component.title }}</h2>{% endif %}
+    <salla-reviews limit="{{ component.limit ?: 8 }}" sort="{{ sort }}" type="store" {{ names == 'hide' ? 'hide-customer-info' : '' }}></salla-reviews>
+  </div>
+  {% if names == 'mask' %}
+  <script>
+    (function () {
+      var root = document.currentScript.parentElement;
+      function mask(name) {
+        return name.split(/\s+/).map(function (w) { return w ? w.charAt(0) + new Array(Math.max(3, w.length)).join('*') : w; }).join(' ');
+      }
+      function run() {
+        root.querySelectorAll('.s-reviews-testimonial__info h2:not([data-masked])').forEach(function (h) {
+          h.setAttribute('data-masked', '1');
+          h.textContent = mask(h.textContent.trim());
+        });
+      }
+      new MutationObserver(run).observe(root, { childList: true, subtree: true });
+      run();
+    })();
+  </script>
+  {% endif %}
+</section>

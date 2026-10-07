@@ -1,0 +1,156 @@
+{#
+  Moment order tabs
+   1. جاهز للشحن — up to three product rows (title, «عرض الكل», sliding rail or fixed grid)
+   2. طلبات مخصصة — every club logo, each links to its club page
+   3. الأكواب — the mugs category, grid by default
+#}
+{% set uid = 'm-tabs-' ~ position %}
+{% set ready_eta = component.ready_eta ?: theme.settings.get('m_ready_eta', '١–٥ أيام') %}
+{% set custom_eta = component.custom_eta ?: theme.settings.get('m_custom_eta', '١٣–١٨ يومًا') %}
+{% set show_t3 = component.t3_enabled is defined and component.t3_enabled is not null ? (component.t3_enabled ? true : false) : true %}
+{% set sticky = component.sticky is defined and component.sticky is not null ? (component.sticky ? true : false) : true %}
+{% set logo_cols = component.logo_cols %}{% if logo_cols is iterable %}{% set logo_cols = (logo_cols|first).value ?? '3' %}{% endif %}{% set logo_cols = logo_cols ?: '3' %}
+{% set logo_shape = component.logo_shape %}{% if logo_shape is iterable %}{% set logo_shape = (logo_shape|first).value ?? 'tile' %}{% endif %}{% set logo_shape = logo_shape ?: 'tile' %}
+{% set logo_names = component.logo_names is defined and component.logo_names is not null ? (component.logo_names ? true : false) : true %}
+
+{# per-section text style: generated from components/moment/text-style.twig #}
+{% set ms_cls = [] %}{% set ms_css = [] %}{% set ms_fonts = [] %}
+{% for g in ['title', 'text'] %}{% set k = g == 'title' ? 't' : 'b' %}
+  {% set f = attribute(component, g ~ '_font') %}{% if f is iterable %}{% set f = (f|first).value ?? '' %}{% endif %}
+  {% set s = attribute(component, g ~ '_size') %}{% if s is iterable %}{% set s = (s|first).value ?? '' %}{% endif %}
+  {% set w = attribute(component, g ~ '_weight') %}{% if w is iterable %}{% set w = (w|first).value ?? '' %}{% endif %}
+  {% set c = attribute(component, g ~ '_color') %}
+  {% if f and f != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'f']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'f:\'' ~ f ~ '\'']) %}{% set ms_fonts = ms_fonts|merge([f]) %}{% endif %}
+  {% if s and s != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 's']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 's:' ~ s ~ 'px']) %}{% endif %}
+  {% if w and w != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'w']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'w:' ~ w]) %}{% endif %}
+  {% if c and attribute(component, g ~ '_color_on') %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'c']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'c:' ~ c]) %}{% endif %}
+{% endfor %}
+{% set ms_class = ms_cls|join(' ') %}{% set ms_style = ms_css|join(';') %}
+{% if ms_fonts|length %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{% for f in ms_fonts %}family={{ f|replace({' ': '+'}) }}{{ f in ['Bebas Neue', 'Lalezar', 'Reem Kufi Fun'] ? '' : (f == 'Almarai' ? ':wght@400;700;800' : (f == 'Tajawal' ? ':wght@400;500;700;800' : ':wght@400;500;600;700')) }}&{% endfor %}display=swap">{% endif %}
+{% set mb = component.more_style %}{% if mb is iterable %}{% set mb = (mb|first).value ?? 'theme' %}{% endif %}{% set mb = mb ?: 'theme' %}{% set mb_cls = mb != 'theme' ? ' mb-on mb-' ~ mb : '' %}{% set mb_css = component.more_colors_on and component.more_bg ? ';--m-more-bg:' ~ component.more_bg ~ ';--m-more-fg:' ~ (component.more_fg ?: '#ffffff') : '' %}
+<section component-id="{{ componentId }}" class="s-block m-tabs {{ ms_class }}{{ mb_cls }}" style="{{ ms_style }}{{ mb_css }}" data-testid="moment-order-tabs">
+  {% set hero_on = component.hero_on is defined and component.hero_on is not null ? (component.hero_on ? true : false) : false %}
+  {% if hero_on and component.hero|length %}
+    {% set h_ratio = component.hero_ratio %}{% if h_ratio is iterable %}{% set h_ratio = (h_ratio|first).value ?? '16 / 9' %}{% endif %}{% set h_ratio = h_ratio ?: '16 / 9' %}{% set h_auto = component.hero_auto is defined and component.hero_auto is not null ? (component.hero_auto ? true : false) : true %}<div class="m-tabs__hero">{% include 'components.moment.promo-cards' with { items: component.hero, ratio: h_ratio, auto: h_auto, speed: component.hero_speed ?: 4 } %}</div>
+  {% endif %}
+  <input class="m-tabs__radio" type="radio" name="{{ uid }}" id="{{ uid }}-1" checked>
+  <input class="m-tabs__radio" type="radio" name="{{ uid }}" id="{{ uid }}-2">
+  {% if show_t3 %}<input class="m-tabs__radio" type="radio" name="{{ uid }}" id="{{ uid }}-3">{% endif %}
+
+  <nav class="m-tabs__nav{{ sticky ? '' : ' m-tabs__nav--static' }}" aria-label="طريقة الطلب">
+    <div class="m-tabs__seg {{ show_t3 ? '' : 'm-tabs__seg--two' }}">
+      <label class="m-tabs__tab m-tabs__tab--1" for="{{ uid }}-1">{{ component.t1_label ?: 'جاهز للشحن' }}<span>{{ ready_eta }}</span></label>
+      <label class="m-tabs__tab m-tabs__tab--2" for="{{ uid }}-2">{{ component.t2_label ?: 'طلبات مخصصة' }}<span>{{ custom_eta }}</span></label>
+      {% if show_t3 %}<label class="m-tabs__tab m-tabs__tab--3" for="{{ uid }}-3">{{ component.t3_label ?: 'الأكواب' }}<span>{{ ready_eta }}</span></label>{% endif %}
+    </div>
+  </nav>
+
+  <div class="m-tabs__panes container">
+    <div class="m-tabs__pane m-tabs__pane--1">
+      {% if component.t1_note %}<p class="m-note m-note--fast"><i class="sicon-shipping-fast" aria-hidden="true"></i><span>{{ component.t1_note }}</span></p>{% endif %}
+
+      {# ---- row 1 ---- #}
+      {% set r1_on = component.r1_on is defined and component.r1_on is not null ? (component.r1_on ? true : false) : true %}
+      {% if r1_on %}
+        {% set c = component.r1_category %}{% set r1_ids = [] %}{% set r1_url = '' %}{% set cj = c is null ? '' : c|json_encode(320) %}{% for seg in cj|split('"id":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' and tok not in r1_ids %}{% set r1_ids = r1_ids|merge([tok]) %}{% endif %}{% endfor %}{% if r1_ids is empty %}{% for seg in cj|split('"value":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' %}{% set r1_ids = r1_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if r1_ids is empty %}{% for seg in cj|split('/c')|slice(1) %}{% set tok = seg|split('"')|first|split('?')|first %}{% if tok matches '/^[0-9]+$/' %}{% set r1_ids = r1_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if r1_ids is empty and cj matches '/^"?[0-9]+"?$/' %}{% set r1_ids = [cj|trim('"')] %}{% endif %}{% set urlp = cj|split('"url":"') %}{% if urlp|length > 1 %}{% set r1_url = (urlp|slice(1, 1)|first)|split('"')|first %}{% endif %}
+{% set r1_raw = component.r1_category %}
+{% set r1_limit = component.r1_limit ?: 10 %}
+{% set r1_layout = component.r1_layout %}{% if r1_layout is iterable %}{% set r1_layout = (r1_layout|first).value ?? 'rail' %}{% endif %}{% set r1_layout = r1_layout ?: 'rail' %}
+{% set r1_visible = component.r1_visible %}{% if r1_visible is iterable %}{% set r1_visible = (r1_visible|first).value ?? '2.5' %}{% endif %}{% set r1_visible = r1_visible ?: '2.5' %}
+{% set r1_cols = component.r1_cols %}{% if r1_cols is iterable %}{% set r1_cols = (r1_cols|first).value ?? '2' %}{% endif %}{% set r1_cols = r1_cols ?: '2' %}
+{% set r1_auto = component.r1_auto is defined and component.r1_auto is not null ? (component.r1_auto ? true : false) : true %}
+{% set r1_speed = component.r1_speed ?: 3 %}
+        {% set r1_more = component.r1_url ?: r1_url %}
+        <div class="m-row">
+          {% if component.r1_title or r1_more %}
+            <div class="m-row__head">
+              {% if component.r1_title %}<h2 class="m-h2">{{ component.r1_title }}</h2>{% else %}<span></span>{% endif %}
+              {% if r1_more %}<a class="m-row__more" href="{{ r1_more }}">{{ component.r1_more ?: 'عرض الكل' }}</a>{% endif %}
+            </div>
+          {% endif %}
+          {% if r1_ids|length %}<div class="m-list m-list--{{ r1_layout }}" style="--vis: {{ r1_visible }}; --cols: {{ r1_cols }}"{% if r1_layout == 'rail' and r1_auto %} data-auto="{{ r1_speed }}"{% endif %}><salla-products-list source="categories" source-value="[{{ r1_ids|join(',') }}]" limit="{{ r1_limit }}"></salla-products-list></div>{% else %}<p class="m-empty">اختر تصنيف هذا الصف من إعدادات القسم.<br><small dir="ltr" style="opacity:.6"> v4 · {{ r1_raw|json_encode|slice(0, 160) }}</small></p>{% endif %}
+        </div>
+      {% endif %}
+      {# ---- row 2 ---- #}
+      {% set r2_on = component.r2_on is defined and component.r2_on is not null ? (component.r2_on ? true : false) : true %}
+      {% if r2_on %}
+        {% set c = component.r2_category %}{% set r2_ids = [] %}{% set r2_url = '' %}{% set cj = c is null ? '' : c|json_encode(320) %}{% for seg in cj|split('"id":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' and tok not in r2_ids %}{% set r2_ids = r2_ids|merge([tok]) %}{% endif %}{% endfor %}{% if r2_ids is empty %}{% for seg in cj|split('"value":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' %}{% set r2_ids = r2_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if r2_ids is empty %}{% for seg in cj|split('/c')|slice(1) %}{% set tok = seg|split('"')|first|split('?')|first %}{% if tok matches '/^[0-9]+$/' %}{% set r2_ids = r2_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if r2_ids is empty and cj matches '/^"?[0-9]+"?$/' %}{% set r2_ids = [cj|trim('"')] %}{% endif %}{% set urlp = cj|split('"url":"') %}{% if urlp|length > 1 %}{% set r2_url = (urlp|slice(1, 1)|first)|split('"')|first %}{% endif %}
+{% set r2_raw = component.r2_category %}
+{% set r2_limit = component.r2_limit ?: 10 %}
+{% set r2_layout = component.r2_layout %}{% if r2_layout is iterable %}{% set r2_layout = (r2_layout|first).value ?? 'rail' %}{% endif %}{% set r2_layout = r2_layout ?: 'rail' %}
+{% set r2_visible = component.r2_visible %}{% if r2_visible is iterable %}{% set r2_visible = (r2_visible|first).value ?? '2.5' %}{% endif %}{% set r2_visible = r2_visible ?: '2.5' %}
+{% set r2_cols = component.r2_cols %}{% if r2_cols is iterable %}{% set r2_cols = (r2_cols|first).value ?? '2' %}{% endif %}{% set r2_cols = r2_cols ?: '2' %}
+{% set r2_auto = component.r2_auto is defined and component.r2_auto is not null ? (component.r2_auto ? true : false) : true %}
+{% set r2_speed = component.r2_speed ?: 3 %}
+        {% set r2_more = component.r2_url ?: r2_url %}
+        <div class="m-row">
+          {% if component.r2_title or r2_more %}
+            <div class="m-row__head">
+              {% if component.r2_title %}<h2 class="m-h2">{{ component.r2_title }}</h2>{% else %}<span></span>{% endif %}
+              {% if r2_more %}<a class="m-row__more" href="{{ r2_more }}">{{ component.r2_more ?: 'عرض الكل' }}</a>{% endif %}
+            </div>
+          {% endif %}
+          {% if r2_ids|length %}<div class="m-list m-list--{{ r2_layout }}" style="--vis: {{ r2_visible }}; --cols: {{ r2_cols }}"{% if r2_layout == 'rail' and r2_auto %} data-auto="{{ r2_speed }}"{% endif %}><salla-products-list source="categories" source-value="[{{ r2_ids|join(',') }}]" limit="{{ r2_limit }}"></salla-products-list></div>{% else %}<p class="m-empty">اختر تصنيف هذا الصف من إعدادات القسم.<br><small dir="ltr" style="opacity:.6"> v4 · {{ r2_raw|json_encode|slice(0, 160) }}</small></p>{% endif %}
+        </div>
+      {% endif %}
+      {# ---- row 3 ---- #}
+      {% set r3_on = component.r3_on is defined and component.r3_on is not null ? (component.r3_on ? true : false) : false %}
+      {% if r3_on %}
+        {% set c = component.r3_category %}{% set r3_ids = [] %}{% set r3_url = '' %}{% set cj = c is null ? '' : c|json_encode(320) %}{% for seg in cj|split('"id":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' and tok not in r3_ids %}{% set r3_ids = r3_ids|merge([tok]) %}{% endif %}{% endfor %}{% if r3_ids is empty %}{% for seg in cj|split('"value":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' %}{% set r3_ids = r3_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if r3_ids is empty %}{% for seg in cj|split('/c')|slice(1) %}{% set tok = seg|split('"')|first|split('?')|first %}{% if tok matches '/^[0-9]+$/' %}{% set r3_ids = r3_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if r3_ids is empty and cj matches '/^"?[0-9]+"?$/' %}{% set r3_ids = [cj|trim('"')] %}{% endif %}{% set urlp = cj|split('"url":"') %}{% if urlp|length > 1 %}{% set r3_url = (urlp|slice(1, 1)|first)|split('"')|first %}{% endif %}
+{% set r3_raw = component.r3_category %}
+{% set r3_limit = component.r3_limit ?: 10 %}
+{% set r3_layout = component.r3_layout %}{% if r3_layout is iterable %}{% set r3_layout = (r3_layout|first).value ?? 'rail' %}{% endif %}{% set r3_layout = r3_layout ?: 'rail' %}
+{% set r3_visible = component.r3_visible %}{% if r3_visible is iterable %}{% set r3_visible = (r3_visible|first).value ?? '2.5' %}{% endif %}{% set r3_visible = r3_visible ?: '2.5' %}
+{% set r3_cols = component.r3_cols %}{% if r3_cols is iterable %}{% set r3_cols = (r3_cols|first).value ?? '2' %}{% endif %}{% set r3_cols = r3_cols ?: '2' %}
+{% set r3_auto = component.r3_auto is defined and component.r3_auto is not null ? (component.r3_auto ? true : false) : true %}
+{% set r3_speed = component.r3_speed ?: 3 %}
+        {% set r3_more = component.r3_url ?: r3_url %}
+        <div class="m-row">
+          {% if component.r3_title or r3_more %}
+            <div class="m-row__head">
+              {% if component.r3_title %}<h2 class="m-h2">{{ component.r3_title }}</h2>{% else %}<span></span>{% endif %}
+              {% if r3_more %}<a class="m-row__more" href="{{ r3_more }}">{{ component.r3_more ?: 'عرض الكل' }}</a>{% endif %}
+            </div>
+          {% endif %}
+          {% if r3_ids|length %}<div class="m-list m-list--{{ r3_layout }}" style="--vis: {{ r3_visible }}; --cols: {{ r3_cols }}"{% if r3_layout == 'rail' and r3_auto %} data-auto="{{ r3_speed }}"{% endif %}><salla-products-list source="categories" source-value="[{{ r3_ids|join(',') }}]" limit="{{ r3_limit }}"></salla-products-list></div>{% else %}<p class="m-empty">اختر تصنيف هذا الصف من إعدادات القسم.<br><small dir="ltr" style="opacity:.6"> v4 · {{ r3_raw|json_encode|slice(0, 160) }}</small></p>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="m-tabs__pane m-tabs__pane--2">
+      {% if component.t2_note %}<p class="m-note m-note--slow"><i class="sicon-time" aria-hidden="true"></i><span>{{ component.t2_note }}</span></p>{% endif %}
+      {% if component.t2_heading %}<h2 class="m-h2">{{ component.t2_heading }}</h2>{% endif %}
+      <div class="m-crests m-crests--{{ logo_shape }}" style="--cols: {{ logo_cols }}">
+        {% for club in component.clubs %}
+          {% set club_url = club.url is iterable ? (club.url.url ?? club.url.value ?? '') : club.url %}
+          {% if club_url %}<a class="m-crest" href="{{ club_url }}" aria-label="{{ club.name }}">{% else %}<div class="m-crest">{% endif %}
+            <span class="m-crest__disc">
+              {% if club.logo %}<img src="{{ club.logo }}" alt="{{ club.name }}" loading="lazy">
+              {% else %}<span class="m-crest__ph" style="--club: {{ club.color ?: '#111417' }}"><b>{{ club.name|slice(0, 1) }}</b></span>{% endif %}
+            </span>
+            {% if logo_names %}<span class="m-crest__name">{{ club.name }}</span>{% endif %}
+          {% if club_url %}</a>{% else %}</div>{% endif %}
+        {% endfor %}
+      </div>
+      {% if component.t2_url %}<a class="m-btn m-btn--solid" href="{{ component.t2_url }}">{{ component.t2_button ?: 'عرض كل الطلبات المخصصة' }}</a>{% endif %}
+    </div>
+
+    {% if show_t3 %}
+      <div class="m-tabs__pane m-tabs__pane--3">
+        {% if component.t3_note %}<p class="m-note m-note--fast"><i class="sicon-shipping-fast" aria-hidden="true"></i><span>{{ component.t3_note }}</span></p>{% endif %}
+        {% set c = component.t3_category %}{% set t3_ids = [] %}{% set t3_url = '' %}{% set cj = c is null ? '' : c|json_encode(320) %}{% for seg in cj|split('"id":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' and tok not in t3_ids %}{% set t3_ids = t3_ids|merge([tok]) %}{% endif %}{% endfor %}{% if t3_ids is empty %}{% for seg in cj|split('"value":')|slice(1) %}{% set tok = seg|split(',')|first|split('}')|first|trim('" ') %}{% if tok matches '/^[0-9]+$/' %}{% set t3_ids = t3_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if t3_ids is empty %}{% for seg in cj|split('/c')|slice(1) %}{% set tok = seg|split('"')|first|split('?')|first %}{% if tok matches '/^[0-9]+$/' %}{% set t3_ids = t3_ids|merge([tok]) %}{% endif %}{% endfor %}{% endif %}{% if t3_ids is empty and cj matches '/^"?[0-9]+"?$/' %}{% set t3_ids = [cj|trim('"')] %}{% endif %}{% set urlp = cj|split('"url":"') %}{% if urlp|length > 1 %}{% set t3_url = (urlp|slice(1, 1)|first)|split('"')|first %}{% endif %}
+{% set t3_raw = component.t3_category %}
+{% set t3_limit = component.t3_limit ?: 24 %}
+{% set t3_layout = component.t3_layout %}{% if t3_layout is iterable %}{% set t3_layout = (t3_layout|first).value ?? 'grid' %}{% endif %}{% set t3_layout = t3_layout ?: 'grid' %}
+{% set t3_visible = component.t3_visible %}{% if t3_visible is iterable %}{% set t3_visible = (t3_visible|first).value ?? '2.5' %}{% endif %}{% set t3_visible = t3_visible ?: '2.5' %}
+{% set t3_cols = component.t3_cols %}{% if t3_cols is iterable %}{% set t3_cols = (t3_cols|first).value ?? '2' %}{% endif %}{% set t3_cols = t3_cols ?: '2' %}
+{% set t3_auto = component.t3_auto is defined and component.t3_auto is not null ? (component.t3_auto ? true : false) : false %}
+{% set t3_speed = component.t3_speed ?: 3 %}
+        {% if t3_ids|length %}<div class="m-list m-list--{{ t3_layout }}" style="--vis: {{ t3_visible }}; --cols: {{ t3_cols }}"{% if t3_layout == 'rail' and t3_auto %} data-auto="{{ t3_speed }}"{% endif %}><salla-products-list source="categories" source-value="[{{ t3_ids|join(',') }}]" limit="{{ t3_limit }}"></salla-products-list></div>{% else %}<p class="m-empty">اختر تصنيف الأكواب من إعدادات هذا القسم.<br><small dir="ltr" style="opacity:.6"> v4 · {{ t3_raw|json_encode|slice(0, 160) }}</small></p>{% endif %}
+        {% set t3_more = component.t3_more_url ?: t3_url %}
+        {% if t3_more %}<a class="m-btn m-btn--ghost" href="{{ t3_more }}">{{ component.t3_more ?: 'عرض كل الأكواب' }}</a>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+  {% include 'components.moment.rail-script' %}
+</section>

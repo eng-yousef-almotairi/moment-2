@@ -1,0 +1,60 @@
+{#
+| Variable         | Type    | Description                     |
+|------------------|---------|---------------------------------|
+| cart             | object  |                                 |
+| cart.items_count | int     |                                 |
+| cart.total       | string  | Formatted total ex: "١٠٠ ر.س"   |
+#}
+{# Moment header: menu, search, logo, account, cart. One row on every screen. #}
+<header data-testid="store-header" class="store-header m-header">
+  {% if store.settings.is_multilingual or store.settings.currencies_enabled or store.scope %}
+    <div class="m-header__top hidden lg:block">
+      <div class="container flex items-center justify-end gap-2">
+        {% if store.settings.is_multilingual or store.settings.currencies_enabled %}
+          <salla-localization-modal data-testid="store-header-localization" show-trigger></salla-localization-modal>
+        {% endif %}
+        {% if store.scope %}
+          <button class="btn--rounded-gray" onclick="salla.event.dispatch('scopes::open', {'mode': 'default'})">
+            <i class="sicon-location rtl:ml-1 ltr:mr-1"></i> {{ store.scope.name }}
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div id="mainnav" class="main-nav-container m-header__bar">
+    <div class="inner w-full">
+      <div class="container">
+        <div class="m-header__row">
+          <div class="m-header__side">
+            <a data-testid="store-header-mobile-toggle" class="m-icon-btn mburger lg:hidden" href="#mobile-menu" aria-label="القائمة">
+              <i class="sicon-menu" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="m-icon-btn" aria-label="بحث" onclick="salla.event.dispatch('search::open')">
+              <i class="sicon-search" aria-hidden="true"></i>
+            </button>
+            <custom-main-menu></custom-main-menu>
+          </div>
+
+          <a data-testid="store-header-logo" class="m-header__logo navbar-brand" href="{{ store.url }}">
+            {% if store.logo %}
+              <img fetchpriority="high" loading="eager" src="{{ store.logo|cdn(240) }}" alt="{{ store.name }}">
+            {% else %}
+              <span class="m-wordmark">{{ store.name }}</span>
+            {% endif %}
+            {% if is_page('index') %}
+              <h1 class="sr-only">{{ store.name }}</h1>
+            {% endif %}
+          </a>
+
+          <div class="m-header__side m-header__side--end">
+            <salla-user-menu data-testid="store-header-user-menu" class="m-user-menu" avatar-only show-header show-trigger></salla-user-menu>
+            <salla-cart-summary data-testid="store-header-cart" class="m-cart">
+              <i slot="icon" class="header-btn__icon icon sicon-shopping-bag"></i>
+            </salla-cart-summary>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

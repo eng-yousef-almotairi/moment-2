@@ -1,0 +1,4 @@
+{# Moment spacer: vertical space with an optional divider. #}
+<div component-id="{{ componentId }}" class="m-spacer container" style="height: {{ component.height ?? 24 }}px" aria-hidden="true">
+  {% if component.line %}<hr>{% endif %}
+</div>

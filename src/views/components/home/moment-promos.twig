@@ -1,0 +1,20 @@
+{# Moment promo cards: horizontally scrolling image, colour or gradient cards. #}
+{# per-section text style: generated from components/moment/text-style.twig #}
+{% set ms_cls = [] %}{% set ms_css = [] %}{% set ms_fonts = [] %}
+{% for g in ['title', 'text'] %}{% set k = g == 'title' ? 't' : 'b' %}
+  {% set f = attribute(component, g ~ '_font') %}{% if f is iterable %}{% set f = (f|first).value ?? '' %}{% endif %}
+  {% set s = attribute(component, g ~ '_size') %}{% if s is iterable %}{% set s = (s|first).value ?? '' %}{% endif %}
+  {% set w = attribute(component, g ~ '_weight') %}{% if w is iterable %}{% set w = (w|first).value ?? '' %}{% endif %}
+  {% set c = attribute(component, g ~ '_color') %}
+  {% if f and f != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'f']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'f:\'' ~ f ~ '\'']) %}{% set ms_fonts = ms_fonts|merge([f]) %}{% endif %}
+  {% if s and s != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 's']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 's:' ~ s ~ 'px']) %}{% endif %}
+  {% if w and w != 'theme' %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'w']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'w:' ~ w]) %}{% endif %}
+  {% if c and attribute(component, g ~ '_color_on') %}{% set ms_cls = ms_cls|merge(['ms-' ~ k ~ 'c']) %}{% set ms_css = ms_css|merge(['--ms-' ~ k ~ 'c:' ~ c]) %}{% endif %}
+{% endfor %}
+{% set ms_class = ms_cls|join(' ') %}{% set ms_style = ms_css|join(';') %}
+{% if ms_fonts|length %}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{% for f in ms_fonts %}family={{ f|replace({' ': '+'}) }}{{ f in ['Bebas Neue', 'Lalezar', 'Reem Kufi Fun'] ? '' : (f == 'Almarai' ? ':wght@400;700;800' : (f == 'Tajawal' ? ':wght@400;500;700;800' : ':wght@400;500;600;700')) }}&{% endfor %}display=swap">{% endif %}
+<section component-id="{{ componentId }}" class="s-block m-promos-block {{ ms_class }}" style="{{ ms_style }}" data-testid="moment-promos">
+  {% set p_ratio = component.ratio %}{% if p_ratio is iterable %}{% set p_ratio = (p_ratio|first).value ?? '16 / 9' %}{% endif %}{% set p_ratio = p_ratio ?: '16 / 9' %}{% set p_auto = component.auto is defined and component.auto is not null ? (component.auto ? true : false) : true %}
+  {% include 'components.moment.promo-cards' with { items: component.items, ratio: p_ratio, auto: p_auto, speed: component.speed ?: 4 } %}
+  {% include 'components.moment.rail-script' %}
+</section>

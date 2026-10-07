@@ -1,0 +1,8 @@
+{# Shirt back preview. Params: name, number, color, ink, size (sm|md|lg) #}
+<span class="m-back m-back--{{ size ?: 'md' }}" style="--club: {{ color ?: 'var(--m-kit)' }}; --club-ink: {{ ink ?: 'var(--m-kit-ink)' }}" aria-hidden="true">
+    <span class="m-back__shape"></span>
+    <span class="m-back__txt">
+        <span class="m-back__name" data-kit-name>{{ name }}</span>
+        <span class="m-back__no" data-kit-number>{{ number }}</span>
+    </span>
+</span>

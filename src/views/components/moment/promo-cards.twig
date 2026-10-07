@@ -1,0 +1,41 @@
+{#
+  Promo cards strip. Params: items (collection rows), eager (bool).
+  Each card: image, or a coloured / gradient card with an optional shirt back.
+#}
+{% set ratio = ratio ?? '16 / 9' %}{% set speed = speed ?? 4 %}
+<div class="m-promos-wrap">
+<div class="m-promos{{ items|length == 1 ? ' m-promos--one' : '' }}" style="--promo-ratio: {{ ratio }}"{% if auto ?? true and items|length > 1 %} data-auto="{{ speed }}"{% endif %}>
+  {% for item in items %}
+    {% set link = item.url is iterable ? (item.url.url ?? item.url.value ?? '#') : (item.url ?: '#') %}
+    {% set bg = item.bg_style %}{% if bg is iterable %}{% set bg = (bg|first).value ?? 'solid' %}{% endif %}{% set bg = bg ?: 'solid' %}
+    {% set dir = item.bg_dir %}{% if dir is iterable %}{% set dir = (dir|first).value ?? '135deg' %}{% endif %}{% set dir = dir ?: '135deg' %}
+    {% set c1 = item.bg_color ?: '#111417' %}{% set c2 = item.bg_color2 ?: '#3a3f45' %}
+    {% if bg == 'gradient' %}
+      {% set paint = dir == 'radial' ? 'radial-gradient(circle at 30% 20%, ' ~ c1 ~ ', ' ~ c2 ~ ')' : 'linear-gradient(' ~ dir ~ ', ' ~ c1 ~ ', ' ~ c2 ~ ')' %}
+    {% else %}
+      {% set paint = c1 %}
+    {% endif %}
+    {% set ink = item.text_color ?: '#ffffff' %}
+    {% if item.image %}
+      <a class="m-promo" href="{{ link }}" style="color: {{ ink }}">
+        <img src="{{ item.image|cdn(900) }}" alt="{{ item.title }}" loading="{{ loop.first ? 'eager' : 'lazy' }}">
+        {% if item.title or item.subtitle %}
+          <span class="m-promo__cap">
+            {% if item.title %}<b>{{ item.title }}</b>{% endif %}
+            {% if item.subtitle %}<span>{{ item.subtitle }}</span>{% endif %}
+          </span>
+        {% endif %}
+      </a>
+    {% else %}
+      <a class="m-promo m-promo--dark" href="{{ link }}" style="background: {{ paint }}; color: {{ ink }}">
+        {% if item.dark is not defined or item.dark %}
+          {% include 'components.moment.shirt-back' with { name: item.kit_name ?: 'MOMENT', number: item.kit_number ?: '10', color: item.kit_color ?: '#c8102e', ink: '#ffffff', size: 'sm' } %}
+        {% endif %}
+        {% if item.title %}<b>{{ item.title }}</b>{% endif %}
+        {% if item.subtitle %}<span>{{ item.subtitle }}</span>{% endif %}
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>
+{% if items|length > 1 %}<div class="m-promos__dots" aria-hidden="true">{% for item in items %}<i{{ loop.first ? ' class="is-on"' : '' }}></i>{% endfor %}</div>{% endif %}
+</div>

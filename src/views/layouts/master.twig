@@ -1,0 +1,223 @@
+{# ############## Shared Variables in all views ################
+| Variable                                           | Type     | Description                                                                                              |
+|----------------------------------------------------|----------|----------------------------------------------------------------------------------------------------------|
+| store                                              | Store    |                                                                                                          |
+| store.id                                           | int      |                                                                                                          |
+| store.name                                         | string   |                                                                                                          |
+| store.username                                     | string   |                                                                                                          |
+| store.description                                  | string   |                                                                                                          |
+| store.slogan                                       | ?string  | * if feature in twilight.json                                                                            |
+| store.logo                                         | string   |                                                                                                          |
+| store.url                                          | string   |                                                                                                          |
+| store.api                                          | string   | the api url for current store                                                                            |
+| store.icon                                         | string   | *fav icon url                                                                                            |
+| store.contacts                                     | object   | [mobile, phone, email, whatsapp, telegram], ex. store.contacts.email                                     |
+| store.social                                       | object   | [instagram, snapchat, twitter, youtube, facebook, pinterest, maroof, whatsapp], ex. store.social.twitter |
+| store.settings                                     | object   |                                                                                                          |
+| store.settings.auth.email_allowed                  | bool     |                                                                                                          |
+| store.settings.auth.mobile_allowed                 | bool     |                                                                                                          |
+| store.settings.auth.is_email_required              | bool     |                                                                                                          |
+| store.settings.cart.apply_coupon_enabled           | bool     | Does visitor allowed to applay coupon in cart page                                                       |
+| store.settings.product.total_sold_enabled          | bool     |                                                                                                          |
+| store.settings.product.fit_type                    | ?string  | null when equal product card size is off, or ['cover', 'contain']                                        |
+| store.settings.category.testimonial_enabled        | bool     | Show random testimonials in category page                                                                |
+| store.settings.tax.number                          | ?string  |                                                                                                          |
+| store.settings.tax.certificate                     | ?string  | certificate image url                                                                                    |
+| store.settings.tax.taxable_prices_enabled          | bool     | Does tax included in the prices ex product_price 100 & tax is 15, price will be 115                      |
+| store.settings.rating_enabled                      | bool     | Is one of: store_enabled or shipping_enabled or products_enabled                                         |
+| store.settings.arabic_numbers_enabled              | bool     | Does the merchant wants the numbers to be shown as Arabic format                                         |
+| store.settings.is_multilingual                     | bool     |                                                                                                          |
+| store.settings.currencies_enabled                  | bool     |     
+| theme                                              | Theme    |                                                                                                          |
+| theme.id                                           | int      |                                                                                                          |
+| theme.name                                         | string   |                                                                                                          |
+| theme.mode                                         | string   | `live`, `preview`                                                                                        |
+| theme.is_rtl                                       | bool     |                                                                                                          |
+| theme.translations_hash                            | int      | to be used in case merchant updated frontend store translations                                          |
+| theme.color                                        | object   |                                                                                                          |
+| theme.color.primary                                | string   |                                                                                                          |
+| theme.color.text                                   | string   | suitable text color comparing to `theme.primary.color`, #000000, #FFFFFF                                 |
+| theme.color.reverse_primary                        | string   |                                                                                                          |
+| theme.color.reverse_text                           | string   | if `theme.text_color=#000000` means that `theme.reverse_text_color=#FFFFFF`                              |
+| theme.color.is_dark                                | bool     | Does main store color `theme.primary.color` considered as dim color?                                     |
+| theme.color.darker(float alpha, ?string hexColor)  | string   | get darker color from `theme.primary.color` or from passed color, `alpha` range from 0.0-1.0             |
+| theme.color.lighter(float alpha, ?string hexColor) | string   | get lighter color from `theme.primary.color` or from passed color, `alpha` range from 0.0-1.0            |
+| theme.font                                         | ?object  | Salla predefined font, null when the theme doesn't have `fonts` feature                                  |
+| theme.font.name                                    | string   | DINNextLTArabic-Regular, Amazon-Ember, Apple, Dubai, Estedad                                             |
+| theme.font.url                                     | string   | css full url ex: 'https://my_store.test/dist/fonts/default.css'                                          |
+| theme.settings                                     | object   | dynamic object with values of the `settings` in twilight.json ex. `theme.settings.topnav_is_dark`        |
+| theme.settings.set(settingName, value)             | string   | set global var, then get it {{theme.settings.get('my_var','fallback') }}                                 |
+| theme.settings.get(settingName, default=null)      | mixed    | get theme setting ex `theme.settings.get('my_var', 'fallback')`                                          |
+#}
+<!DOCTYPE html>
+<html lang="{{ language.code }}" dir="{{ theme.is_rtl ? 'rtl' : 'ltr' }}">
+<!-- بسم الله الرحمن الرحيم -->
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{ theme.settings.set('placeholder', 'images/placeholder.png') }}
+
+    <script defer data-cfasync="false" crossorigin="anonymous" src="{{ 'product-card.js'|asset }}"></script>
+    <script defer src="{{ 'main-menu.js'|asset }}"></script>
+    {% if theme.settings.get('enable_add_product_toast', true) %}
+        <script defer src="{{ 'add-product-toast.js'|asset }}"></script>
+    {% endif %}
+
+    {% block head_scripts %}{% endblock %}
+
+
+    <script data-cfasync="false">
+        window.header_is_sticky = "{{theme.settings.get('header_is_sticky', 'Default Value')}}"
+        window.imageZoom = "{{theme.settings.get('imageZoom')}}"
+        window.can_access_wallet = {{ user.can_access_wallet | json_encode }}
+        window.enable_more_menu = "{{ theme.settings.get('enable_more_menu', true) }}"
+        window.enable_add_product_toast = "{{ theme.settings.get('enable_add_product_toast', true) }}"
+        window.notify_when_available_in_card = "{{ theme.settings.get('notify_when_available_in_card', true) }}"
+    </script>
+    
+    {% hook 'head:start' %}
+    {% hook head %}
+    {% block styles %}{% endblock %}
+    <link rel="stylesheet" href="{{ 'app.css' | asset }}">
+    <link rel="stylesheet" href="{{ theme.font.path|cdn }}"/>
+    <link rel="stylesheet" href="{{ 'fonts/sallaicons.css'|cdn }}"/>
+    
+    <style>
+        :root {
+            --font-main: '{{theme.font.name}}';
+            --color-primary: {{ theme.color.primary }};
+            --color-primary-dark: {{ theme.color.darker(0.15) }};
+            --color-primary-light: {{ theme.color.lighter(0.15) }};
+            --color-primary-reverse: {{ theme.color.reverse_text }};
+            /* Theme specific variables */
+            --s-radius: .75rem;
+        }
+    </style>
+
+    {# Moment design tokens and fonts, set from the theme editor #}
+    {% set m_display = theme.settings.get('m_display_font', 'Alexandria') %}{% if m_display is iterable %}{% set m_display = (m_display|first).value ?? 'Alexandria' %}{% endif %}{% set m_display = m_display ?: 'Alexandria' %}
+    {% set m_body = theme.settings.get('m_body_font', 'IBM Plex Sans Arabic') %}{% if m_body is iterable %}{% set m_body = (m_body|first).value ?? 'IBM Plex Sans Arabic' %}{% endif %}{% set m_body = m_body ?: 'IBM Plex Sans Arabic' %}
+    {% set m_num = theme.settings.get('m_num_font', 'Barlow Condensed') %}{% if m_num is iterable %}{% set m_num = (m_num|first).value ?? 'Barlow Condensed' %}{% endif %}{% set m_num = m_num ?: 'Barlow Condensed' %}
+    {% if m_num == 'same' %}{% set m_num = m_display %}{% endif %}
+    {% set m_radius = theme.settings.get('m_radius', 'soft') %}{% if m_radius is iterable %}{% set m_radius = (m_radius|first).value ?? 'soft' %}{% endif %}{% set m_radius = m_radius ?: 'soft' %}
+    {% set m_ratio = theme.settings.get('m_card_ratio', 'square') %}{% if m_ratio is iterable %}{% set m_ratio = (m_ratio|first).value ?? 'square' %}{% endif %}{% set m_ratio = m_ratio ?: 'square' %}
+    {% set m_tw = theme.settings.get('m_title_weight', '700') %}{% if m_tw is iterable %}{% set m_tw = (m_tw|first).value ?? '700' %}{% endif %}{% set m_tw = m_tw ?: '700' %}
+    {% set m_ts = theme.settings.get('m_title_size', 'md') %}{% if m_ts is iterable %}{% set m_ts = (m_ts|first).value ?? 'md' %}{% endif %}{% set m_ts = m_ts ?: 'md' %}
+    {% set m_bs = theme.settings.get('m_text_size', 'md') %}{% if m_bs is iterable %}{% set m_bs = (m_bs|first).value ?? 'md' %}{% endif %}{% set m_bs = m_bs ?: 'md' %}
+    {% set m_ps = theme.settings.get('m_price_size', 'md') %}{% if m_ps is iterable %}{% set m_ps = (m_ps|first).value ?? 'md' %}{% endif %}{% set m_ps = m_ps ?: 'md' %}
+    {% set m_ts_v = m_ts == 'xs' ? '0.88' : (m_ts == 'sm' ? '0.94' : (m_ts == 'lg' ? '1.08' : (m_ts == 'xl' ? '1.16' : '1'))) %}{% set m_bs_v = m_bs == 'xs' ? '0.88' : (m_bs == 'sm' ? '0.94' : (m_bs == 'lg' ? '1.08' : (m_bs == 'xl' ? '1.16' : '1'))) %}{% set m_ps_v = m_ps == 'xs' ? '0.88' : (m_ps == 'sm' ? '0.94' : (m_ps == 'lg' ? '1.08' : (m_ps == 'xl' ? '1.16' : '1'))) %}
+    {% set m_display_w = m_display in ['Almarai'] ? '400;700;800' : (m_display in ['Tajawal'] ? '400;500;700;800' : (m_display in ['Bebas Neue', 'Lalezar'] ? '' : (m_display in ['Barlow Condensed', 'Oswald'] ? '500;600;700' : (m_display in ['IBM Plex Sans Arabic', 'Readex Pro', 'El Messiri'] ? '400;500;600;700' : '400;500;600;700;800')))) %}{% set m_body_w = m_body in ['Almarai'] ? '400;700;800' : (m_body in ['Tajawal'] ? '400;500;700;800' : (m_body in ['Bebas Neue', 'Lalezar'] ? '' : (m_body in ['Barlow Condensed', 'Oswald'] ? '500;600;700' : (m_body in ['IBM Plex Sans Arabic', 'Readex Pro', 'El Messiri'] ? '400;500;600;700' : '400;500;600;700;800')))) %}{% set m_num_w = m_num in ['Almarai'] ? '400;700;800' : (m_num in ['Tajawal'] ? '400;500;700;800' : (m_num in ['Bebas Neue', 'Lalezar'] ? '' : (m_num in ['Barlow Condensed', 'Oswald'] ? '500;600;700' : (m_num in ['IBM Plex Sans Arabic', 'Readex Pro', 'El Messiri'] ? '400;500;600;700' : '400;500;600;700;800')))) %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ m_display|replace({' ': '+'}) }}{{ m_display_w ? ':wght@' ~ m_display_w : '' }}&{% if m_body != m_display %}family={{ m_body|replace({' ': '+'}) }}{{ m_body_w ? ':wght@' ~ m_body_w : '' }}&{% endif %}{% if m_num != m_display and m_num != m_body %}family={{ m_num|replace({' ': '+'}) }}{{ m_num_w ? ':wght@' ~ m_num_w : '' }}&{% endif %}display=swap">
+    <style>
+        :root {
+            --m-ink: {{ theme.settings.get('m_ink') ?: '#111417' }};
+            --m-ground: {{ theme.settings.get('m_ground') ?: '#ffffff' }};
+            --m-photo: {{ theme.settings.get('m_photo') ?: '#e9e8e6' }};
+            --m-fast: {{ theme.settings.get('m_fast') ?: '#0f6b3f' }};
+            --m-slow: {{ theme.settings.get('m_slow') ?: '#8a4a00' }};
+            --m-section-bg: {{ theme.settings.get('m_section_bg') ?: '#ffffff' }};
+            --m-soft-c: {{ theme.settings.get('m_soft') ?: '#f6f6f6' }};
+            --m-title-c: {{ theme.settings.get('m_title_color') ?: '#111417' }};
+            --m-muted: {{ theme.settings.get('m_muted') ?: '#55585b' }};
+            --m-price-c: {{ theme.settings.get('m_price_color') ?: '#111417' }};
+            --m-sale-c: {{ theme.settings.get('m_sale_color') ?: '#111417' }};
+            --m-btn-bg: {{ theme.settings.get('m_btn_bg') ?: '#111417' }};
+            --m-btn-fg: {{ theme.settings.get('m_btn_fg') ?: '#ffffff' }};
+            --m-tab-on: {{ theme.settings.get('m_tab_active') ?: '#ffffff' }};
+            --m-add-bg: {{ theme.settings.get('m_add_bg') ?: '#ffffff' }};
+            --m-add-fg: {{ theme.settings.get('m_add_fg') ?: '#111417' }};
+            --m-kit: {{ theme.settings.get('m_kit_color') ?: '#c8102e' }};
+            --m-kit-ink: {{ theme.settings.get('m_kit_ink') ?: '#ffffff' }};
+            --m-more-bg: {{ theme.settings.get('m_more_bg') ?: '#111417' }};
+            --m-more-fg: {{ theme.settings.get('m_more_fg') ?: '#ffffff' }};
+            --m-announce: {{ theme.settings.get('m_announce_bg') ?: '#111417' }};
+            --m-display: '{{ m_display }}', '{{ m_body }}', system-ui, sans-serif;
+            --m-body: '{{ m_body }}', system-ui, sans-serif;
+            --m-num-font: '{{ m_num }}';
+            --m-tw: {{ m_tw }};
+            --m-ts: {{ m_ts_v }};
+            --m-bs: {{ m_bs_v }};
+            --m-ps: {{ m_ps_v }};
+            --m-logo-h: {{ theme.settings.get('m_logo_height') ?: 40 }}px;
+        }
+    </style>
+    <script data-cfasync="false">
+        window.moment_theme = {
+            ready_eta: {{ theme.settings.get('m_ready_eta', '١–٥ أيام')|json_encode|raw }},
+            custom_eta: {{ theme.settings.get('m_custom_eta', '١٣–١٨ يومًا')|json_encode|raw }},
+            kit_builder: {{ theme.settings.get('m_kit_builder', true) ? 'true' : 'false' }},
+            kit_name_label: {{ theme.settings.get('m_kit_name_label', 'الاسم')|json_encode|raw }},
+            kit_number_label: {{ theme.settings.get('m_kit_number_label', 'الرقم')|json_encode|raw }}
+        };
+    </script>
+    {% if theme.settings.get('m_latin_digits', true) %}
+    <script>
+      /* Moment: prices and numbers in Latin digits (150 not ١٥٠), like design 3 */
+      (function () {
+        var map = { '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9', '٫': '.', '٬': ',' };
+        var sel = '.s-product-card-price, .s-product-card-sale-price, .total-price, .before-price, [data-testid="store-product-price"], .m-card, .s-cart-summary-count, .m-tabbar__badge, .s-product-card-starting-price';
+        function fix(root) {
+          (root.querySelectorAll ? root.querySelectorAll(sel) : []).forEach(function (el) {
+            var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n;
+            while ((n = w.nextNode())) { if (/[٠-٩٫٬]/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/[٠-٩٫٬]/g, function (d) { return map[d]; }); }
+          });
+        }
+        var queued = false;
+        new MutationObserver(function () { if (queued) return; queued = true; requestAnimationFrame(function () { queued = false; fix(document); }); })
+          .observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+        document.addEventListener('DOMContentLoaded', function () { fix(document); });
+      })();
+    </script>
+    {% endif %}
+    {# tracking services, custom css feature. #}
+    {% hook 'head:end' %}
+</head>
+<body id="app" class="theme-raed theme-moment overflow-x-hidden {% hook 'body:classes' %}
+  {{ theme.settings.get('footer_is_dark') ? ' footer-is-dark' : ' footer-is-light' }}
+  {{ theme.settings.get('topnav_is_dark') ? ' topnav-is-dark' : '' }}
+  {{ theme.settings.get('sticky_add_to_cart') ? ' is-sticky-product-bar' : '' }}
+  {{ theme.settings.get('m_tabbar', true) ? ' has-m-tabbar' : '' }}
+  m-radius-{{ m_radius }} m-ratio-{{ m_ratio }}
+  {{ theme.settings.get('m_card_meta', true) ? '' : ' m-no-meta' }}{{ theme.settings.get('m_card_qty') ? ' m-show-qty' : '' }}{{ theme.settings.get('m_footer_dark') ? ' m-footer-dark' : '' }}{% set m_more = theme.settings.get('m_more_style', 'pill') %}{% if m_more is iterable %}{% set m_more = (m_more|first).value ?? 'pill' %}{% endif %} m-more-{{ m_more ?: 'pill' }}{{ theme.settings.get('m_card_add', true) ? '' : ' m-no-quick-add' }}
+  ">
+<noscript>
+    To get full functionality of this site you need to enable JavaScript. Here is how
+    <a href="https://www.enable-javascript.com/" rel="noreferrer"
+       target="_blank">To enable JavaScript on webpage</a>.
+</noscript>
+<div class="app-inner flex flex-col min-h-full">
+    {% hook 'body:start' %}
+    {% if theme.settings.get('m_announce_on') and theme.settings.get('m_announce_text') %}
+        {% set m_announce_url = theme.settings.get('m_announce_link') %}
+        <div class="m-announce">
+            {% if m_announce_url %}<a href="{{ m_announce_url }}">{{ theme.settings.get('m_announce_text') }}</a>{% else %}<span>{{ theme.settings.get('m_announce_text') }}</span>{% endif %}
+        </div>
+    {% endif %}
+    {% component 'header.header' %}
+    <main id="main-content" role="main"{{ (page.slug == 'product.single' or page.slug starts with 'product.index') ? ' class="flex flex-col space-y-8 sm:space-y-16"' : '' }}>
+    {% block content %}{% endblock %}
+    </main>
+    {% component 'footer.footer' %}
+</div>
+{% if theme.settings.get('m_tabbar', true) %}
+    {% include 'components.moment.tabbar' %}
+{% endif %}
+{% hook 'body:end' %}
+{% if theme.settings.get('enable_add_product_toast', true) %}
+    <salla-add-product-toast data-testid="store-add-product-toast"></salla-add-product-toast>
+{% endif %}
+<script defer crossorigin="anonymous" src="{{ 'app.js' | asset }}"></script>
+
+{# Twilight Components #}
+<salla-offer-modal data-testid="store-offer-modal"></salla-offer-modal>
+<salla-search data-testid="store-search-modal"></salla-search>
+<salla-login-modal data-testid="store-login-modal"></salla-login-modal>
+{% if store.scope %}
+    <salla-scopes data-testid="store-scopes" selection="{{ store.scope.display_as == 'popup' ? 'mandatory' : 'optional' }}"></salla-scopes>
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>
